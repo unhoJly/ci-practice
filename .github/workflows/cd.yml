@@ -1,0 +1,36 @@
+name: cd
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to VPS
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          # Подключаемся к VPS по логину и паролю. Лучше работать через SSH-ключи, но здесь показываем самый простой
+          # стартовый путь. Переходим в директорию, обновляем файлы и перезапускаем Docker.
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "cd /opt/ci-practice && git fetch origin && git reset --hard origin/work && docker compose pull && docker compose up -d"
+
+      - name: Health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          # После деплоя проверяем реальный endpoint, который должен отвечать кодом 200
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "curl --fail --connect-timeout 5 --max-time 5 --retry 15 --retry-delay 3 --retry-connrefused http://localhost:8080/api/hello"
