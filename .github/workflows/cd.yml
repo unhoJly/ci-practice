@@ -33,4 +33,4 @@ jobs:
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
           # После деплоя проверяем реальный endpoint, который должен отвечать кодом 200
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "curl --fail --connect-timeout 5 --max-time 5 --retry 15 --retry-delay 3 --retry-connrefused http://192.168.0"
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "curl --fail --connect-timeout 5 --max-time 5 --retry 15 --retry-delay 3 --retry-connrefused http://192.168.0.29:8080/api/hello"
